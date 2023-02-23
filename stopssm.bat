@@ -1,9 +1,16 @@
 @ECHO OFF
 
-@REM @REM TASKKILL /F /IM SSM.EXE
+@REM ======================================
+@REM 
+@REM Author: Kenan BOLAT
+@REM Date: 2023.02.23  
+@REM 
+@REM ======================================
 
 setlocal EnableDelayedExpansion
 
+
+set  "xml_folder=C:\Users\knn\Desktop\BATCH"
 
 for /f "tokens=2 delims==" %%a in ('wmic OS Get localdatetime /value') do set "dt=%%a"
 set "YY=%dt:~2,2%" & set "YYYY=%dt:~0,4%" & set "MM=%dt:~4,2%" & set "DD=%dt:~6,2%"
@@ -23,8 +30,9 @@ echo comparingStamp: "%comparingStamp%"
 set da=GGS-L-%currentFullstamp% 
 
 echo ====================================================
-echo %comparingStamp%
-call :string_to_date_number "2023-03-23T22:24:01Z" date_number & echo %date_number%
+echo CurrentDate: %comparingStamp%
+call :string_to_date_number "2023-03-23T22:24:01Z" date_number 
+echo ExampleDate: %date_number%
 echo ====================================================
 
 
@@ -32,8 +40,21 @@ echo ====================================================
 @REM For the GGS the station identifier within the XPATH keywords must be 0 
 @REM For the MGS the station identifier within the XPATH keywords must be 1 
 
-for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@START"') do set "start_date=%%#"
-for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do set "end_date=%%#"
+
+for %%f in ("%xml_folder%\*.xml") do (
+    echo "CONTACT_TABLE : %%f" 
+    set index=0
+    for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@START"') do (echo ---- & echo %%# & set LIST[!index!]=%%# & echo ---- & set /A index+=1)
+    @REM for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do set "end_date=%%#"
+    @REM for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do call :trial
+
+)
+echo bbbb
+for /l %%a in (0 , 1, %index%) do (echo %%a & echo !LIST[%%a]!)
+echo cccc
+
+@REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@START"') do set "start_date=%%#"
+@REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do set "end_date=%%#"
 
 echo %start_date%
 echo %end_date%
@@ -62,8 +83,17 @@ if "%compare2%" LSS "%compare1%" (
 ) else (goto end)
 
 
-:end 
-echo "Not worked"
+:check_date
+setlocal
+if "%compare2%" LSS "%compare1%" (
+    if "%compare3%" GTR "%compare1%" (
+        echo "inside" 
+    ) else (
+        goto end
+    )
+) else (goto end)
+
+
 
 @REM call :string_to_date_number "2023-03-23T22:24:00Z" compare1
 @REM call :string_to_date_number "2023-03-24T22:24:00Z" compare2
@@ -90,3 +120,13 @@ set "ms=%datestr:~20,3%"
 set "datetime=%yyyy%%mm%%dd%%hh%%nn%%ss%.%ms%"
 endlocal & set "%~2=%datetime%"
 exit /b
+
+
+@REM :kill_ssm_task
+@REM echo "INFO"
+@REM @rem TASKKILL /F /IM SSM.EXE
+@REM exit /b 
+
+:trial 
+echo "aaaaaaaaaaaaaaaaa"
+exit /b 
