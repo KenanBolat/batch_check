@@ -2,9 +2,6 @@
 
 @REM @REM TASKKILL /F /IM SSM.EXE
 
-@REM @REM ;cum11.02.2022 tarih karakter numarasý c=1 u=2 ...
-@REM @REM ;23.02.2022 tarih karakter numarasý 2=0 3=1 ...
-
 setlocal EnableDelayedExpansion
 
 
@@ -25,13 +22,11 @@ echo comparingStamp: "%comparingStamp%"
 
 set da=GGS-L-%currentFullstamp% 
 
-echo %da%
-echo "================"
-echo %dt%
+echo ====================================================
+echo %comparingStamp%
 call :string_to_date_number "2023-03-23T22:24:01Z" date_number & echo %date_number%
-echo "================"
+echo ====================================================
 
-SETLOCAL
 
 @REM Get the contact table "start" and "end" time seperately for each pass   
 @REM For the GGS the station identifier within the XPATH keywords must be 0 
@@ -49,11 +44,11 @@ echo %end_date%
 call :string_to_date_number  %comparingStamp% compare1
 call :string_to_date_number %start_date% compare2
 call :string_to_date_number %end_date% compare3
-echo "================="
+echo ====================================================
 echo %compare1%
 echo %compare2%
 echo %compare3%
-echo "================="
+echo ====================================================
 @REM call :string_to_date_number "2023-03-24T22:08:01Z" compare1
 @REM call :string_to_date_number "2023-03-24T22:07:00Z" compare2
 @REM call :string_to_date_number "2023-03-24T22:10:01Z" compare3
@@ -68,7 +63,7 @@ if "%compare2%" LSS "%compare1%" (
 
 
 :end 
-echo "WTF"
+echo "Not worked"
 
 @REM call :string_to_date_number "2023-03-23T22:24:00Z" compare1
 @REM call :string_to_date_number "2023-03-24T22:24:00Z" compare2
