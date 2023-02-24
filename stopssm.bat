@@ -8,10 +8,9 @@
 @REM 
 @REM ======================================
 
-
 @REM config the batch parameters 
 setlocal EnableDelayedExpansion
-
+TASKKILL /F /IM SSM.EXE
 @REM define directory to look for the xml files  
 set  "xml_folder=C:\Users\knn\Desktop\BATCH"
 
@@ -103,7 +102,7 @@ call :check_date %compare1% %compare2% %compare3%
 :check_date
 if "%~2" LSS "%~1" (
     if "%~3" GTR "%~1" (
-        echo "inside"
+        goto ResultBetween
         exit /b 0
     )
 ) 
@@ -114,14 +113,15 @@ exit /b 1
 @REM call :string_to_date_number "2023-03-24T22:24:00Z" compare2
 
 @REM if "%compare1%" LSS "%compare2%"   goto ResultBetween
+:EOF 
+
+:ResultBetween
+echo "Between"
+goto :EOF
 
 
-@REM :ResultBetween
-@REM echo "Between"
 
-
-
-:: Usage: call :string_to_date_number "2023-03-23T22:24:00Z" date_number
+@REM Usage: call :string_to_date_number "2023-03-23T22:24:00Z" date_number
 :string_to_date_number
 setlocal
 set "datestr=%~1"
@@ -136,12 +136,7 @@ set "datetime=%yyyy%%mm%%dd%%hh%%nn%%ss%.%ms%"
 endlocal & set "%~2=%datetime%"
 exit /b
 
-
 @REM :kill_ssm_task
 @REM echo "INFO"
 @REM @rem TASKKILL /F /IM SSM.EXE
 @REM exit /b 
-
-:trial 
-echo "aaaaaaaaaaaaaaaaa"
-exit /b 
