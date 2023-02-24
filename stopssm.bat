@@ -44,35 +44,43 @@ echo ====================================================
 for %%f in ("%xml_folder%\*.xml") do (
     echo "CONTACT_TABLE : %%f" 
     set index=0
-    for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@START"') do (echo ---- & echo %%# & set LIST[!index!]=%%# & echo ---- & set /A index+=1)
-    @REM for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do set "end_date=%%#"
-    @REM for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do call :trial
-
+    for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@START"') do (set START[!index!]=%%# & set /A index+=1)
+    
+    set index=0
+    for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do (set END[!index!]=%%# & set /A index+=1)
 )
-echo bbbb
-for /l %%a in (0 , 1, %index%) do (echo %%a & echo !LIST[%%a]!)
-echo cccc
+
+call :string_to_date_number  %comparingStamp% compare1
+echo ==================================================================================
+for /l %%a in (0 , 1, %index%) do (
+    echo %%a 
+    echo !START[%%a]! 
+    echo !END[%%a]! 
+    call :string_to_date_number  !START[%%a]! compare2
+    call :string_to_date_number  !END[%%a]! compare3
+    echo !compare1!
+    echo !compare2!
+    echo !compare3!
+    )
+echo ==================================================================================
 
 @REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@START"') do set "start_date=%%#"
 @REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do set "end_date=%%#"
 
-echo %start_date%
-echo %end_date%
+@REM echo %start_date%
+@REM echo %end_date%
 
 
 @REM if 2023-03-23T22:24:00Z GTR 2023-03-23T22:26:00Z  if 2023-03-23T22:26:00Z LSS 2023-03-23T22:29:39Z   goto ResultBetween
 
-call :string_to_date_number  %comparingStamp% compare1
-call :string_to_date_number %start_date% compare2
-call :string_to_date_number %end_date% compare3
+call :string_to_date_number "2023-03-24T22:07:00Z" compare1
+call :string_to_date_number "2023-03-24T22:07:00Z" compare2 @REM Start Date 
+call :string_to_date_number "2023-03-24T22:10:00Z" compare3 @REM End Date 
 echo ====================================================
 echo %compare1%
 echo %compare2%
 echo %compare3%
 echo ====================================================
-@REM call :string_to_date_number "2023-03-24T22:08:01Z" compare1
-@REM call :string_to_date_number "2023-03-24T22:07:00Z" compare2
-@REM call :string_to_date_number "2023-03-24T22:10:01Z" compare3
 
 if "%compare2%" LSS "%compare1%" (
     if "%compare3%" GTR "%compare1%" (
