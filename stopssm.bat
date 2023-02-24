@@ -69,6 +69,7 @@ for /l %%a in (0 , 1, %index%) do (
     echo !compare1!
     echo !compare2!
     echo !compare3!
+    call :check_date !compare1! !compare2! !compare3!
     )
 echo ==================================================================================
 
@@ -81,7 +82,7 @@ echo ===========================================================================
 
 @REM if 2023-03-23T22:24:00Z GTR 2023-03-23T22:26:00Z  if 2023-03-23T22:26:00Z LSS 2023-03-23T22:29:39Z   goto ResultBetween
 
-call :string_to_date_number "2023-03-24T22:07:00Z" compare1
+call :string_to_date_number "2023-03-24T22:08:00Z" compare1
 call :string_to_date_number "2023-03-24T22:07:00Z" compare2 @REM Start Date 
 call :string_to_date_number "2023-03-24T22:10:00Z" compare3 @REM End Date 
 echo ====================================================
@@ -90,25 +91,23 @@ echo %compare2%
 echo %compare3%
 echo ====================================================
 
-if "%compare2%" LSS "%compare1%" (
-    if "%compare3%" GTR "%compare1%" (
-        echo "inside" 
-    ) else (
-        goto end
-    )
-) else (goto end)
+@REM if "%compare2%" LSS "%compare1%" (
+@REM     if "%compare3%" GTR "%compare1%" (
+@REM         echo "inside" 
+@REM     ) else (
+@REM         goto end
+@REM     )
+@REM ) else (goto end)
 
-
+call :check_date %compare1% %compare2% %compare3%
 :check_date
-setlocal
-if "%compare2%" LSS "%compare1%" (
-    if "%compare3%" GTR "%compare1%" (
-        echo "inside" 
-    ) else (
-        goto end
+if "%~2" LSS "%~1" (
+    if "%~3" GTR "%~1" (
+        echo "inside"
+        exit /b 0
     )
-) else (goto end)
-
+) 
+exit /b 1
 
 
 @REM call :string_to_date_number "2023-03-23T22:24:00Z" compare1
