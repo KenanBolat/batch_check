@@ -2,16 +2,20 @@
 
 @REM ======================================
 @REM 
-@REM Author: Kenan BOLAT
-@REM Date: 2023.02.23  
+@REM Author                 : Kenan BOLAT
+@REM Initialization Date    : 2023.02.23  
+@REM Update Date            : 2023.02.24  
 @REM 
 @REM ======================================
 
+
+@REM config the batch parameters 
 setlocal EnableDelayedExpansion
 
-
+@REM define directory to look for the xml files  
 set  "xml_folder=C:\Users\knn\Desktop\BATCH"
 
+@REM get the current date and format date string similar to the xml date format   
 for /f "tokens=2 delims==" %%a in ('wmic OS Get localdatetime /value') do set "dt=%%a"
 set "YY=%dt:~2,2%" & set "YYYY=%dt:~0,4%" & set "MM=%dt:~4,2%" & set "DD=%dt:~6,2%"
 set "HH=%dt:~8,2%" & set "Min=%dt:~10,2%" & set "Sec=%dt:~12,2%"
@@ -29,6 +33,7 @@ echo comparingStamp: "%comparingStamp%"
 
 set da=GGS-L-%currentFullstamp% 
 
+@REM Example date strings to compare the different date strings 
 echo ====================================================
 echo CurrentDate: %comparingStamp%
 call :string_to_date_number "2023-03-23T22:24:01Z" date_number 
@@ -36,11 +41,11 @@ echo ExampleDate: %date_number%
 echo ====================================================
 
 
-@REM Get the contact table "start" and "end" time seperately for each pass   
+@REM get the contact table "start" and "end" time seperately for each pass   
 @REM For the GGS the station identifier within the XPATH keywords must be 0 
 @REM For the MGS the station identifier within the XPATH keywords must be 1 
 
-
+@REM populate start and end datetime arrays for each xml file 
 for %%f in ("%xml_folder%\*.xml") do (
     echo "CONTACT_TABLE : %%f" 
     set index=0
@@ -50,6 +55,9 @@ for %%f in ("%xml_folder%\*.xml") do (
     for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do (set END[!index!]=%%# & set /A index+=1)
 )
 
+
+
+@REM Compare start and end array agains the current datetime 
 call :string_to_date_number  %comparingStamp% compare1
 echo ==================================================================================
 for /l %%a in (0 , 1, %index%) do (
