@@ -136,6 +136,43 @@ set "datetime=%yyyy%%mm%%dd%%hh%%nn%%ss%.%ms%"
 endlocal & set "%~2=%datetime%"
 exit /b
 
+
+
+
+
+:calculate_last_day
+setlocal EnableDelayedExpansion
+set "month=%~1"
+set "year=%~2"
+set "last_day="
+if !month! equ 4 set "last_day=30"
+if !month! equ 6 set "last_day=30"
+if !month! equ 9 set "last_day=30"
+if !month! equ 11 set "last_day=30"
+if !month! equ 2 (
+    set /a "leap=year%%4"
+    set /a "leap1=year%%100"
+    set /a "leap2=year%%400"
+    if !leap! equ 0 (
+        if !leap1! neq 0 (
+            set "last_day=29"
+        ) else (
+            if !leap2! equ 0 (
+                set "last_day=29"
+            ) else (
+                set "last_day=28"
+            )
+        )
+    ) else (
+        set "last_day=28"
+    )
+)
+if not defined last_day (
+    set "last_day=31"
+)
+endlocal & set "last_day=%last_day%"
+goto :EOF
+
 @REM :kill_ssm_task
 @REM echo "INFO"
 @REM @rem TASKKILL /F /IM SSM.EXE

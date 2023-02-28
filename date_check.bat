@@ -1,24 +1,38 @@
-@echo off
+@ECHO off
+
+@REM call :check_date "2022-12-31T00:01:50" add updated
+@REM call :check_date "2022-03-01T00:01:50" sub updated
+@REM call :check_date "2020-03-01T00:01:50" sub updated
+@REM call :check_date "2020-03-01T00:01:50" sub updated
+call :check_date "2022-12-31T23:59:50" sub updated
+echo !updated!
+
+
+:EOF
+:check_date 
 setlocal enabledelayedexpansion
+@REM datestring must be either in the format of "yyyy-MM-ddThh:mm:ss"
+set "date_string=%~1"
+@REM operation must be either sub and add
+set "operation=%~2"
 
-rem Get the current date and time
-for /f "tokens=1-3 delims=/ " %%a in ("01/01/2009") do (
-@REM for /f "tokens=1-3 delims=/ " %%a in ("31/12/22") do (
-  set /a "day=1000%%a %% 100"
-  set /a "month=1000%%b %% 100"
-  set /a "year=1000%%c %% 100"
+@REM Get the current date and time
+for /f "tokens=1-6 delims=-T:" %%a in ("%date_string%") do (
+    set /a "year=1000%%a %% 100"
+    set /a "month=1000%%b %% 100"
+    set /a "day=1000%%c %% 100"
+    set /a "hours=1000%%d %% 100"
+    set /a "minutes=1000%%e %% 100"
+    set /a "seconds=1000%%f %% 100"
 )
 
-for /f "tokens=1-3 delims=: " %%a in ("00:01:50") do (
-@REM for /f "tokens=1-3 delims=: " %%a in ("23:59:50") do (
-  set /a "hours=1000%%a %% 100"
-  set /a "minutes=1000%%b %% 100"
-  set /a "seconds=1000%%c %% 100"
-)
+echo !year!
+echo !operation!
 
-set operation="sub"
+
+
 @REM Add 5 minutes to the current time
-if %operation%=="add" (
+if !operation!==add (
   set /a "minutes+=5"
   if !minutes! geq 60 (
     set /a "hours+=1"
@@ -28,7 +42,8 @@ if %operation%=="add" (
     set /a "day+=1"
     set /a "hours-=24"
   )
-) else if %operation%=="sub" (
+) else if !operation!==sub (
+
   set /a "minutes-=5"
   if !minutes! lss 0 (
     set /a "hours-=1"
@@ -42,7 +57,6 @@ if %operation%=="add" (
 
 
 @REM Check for end-of-month boundary conditions
-
 call :calculate_last_day !month! !year! last_day
 if !day! gtr !last_day! (
   set /a "day=1"
@@ -65,9 +79,7 @@ if !day! lss 1 (
   set /a "day=!last_day!"
 )
 
-
-
-rem Display the updated date and time
+@REM Display the updated date and time
 if !day! lss 10 set "day=0!day!"
 if !month! lss 10 set "month=0!month!"
 if !year! lss 10 set "year=!year!"
@@ -75,9 +87,10 @@ set /a year=!year!+2000
 if !hours! lss 10 set "hours=0!hours!"
 if !minutes! lss 10 set "minutes=0!minutes!"
 if !seconds! lss 10 set "seconds=0!seconds!"
-echo %day%/%month%/%year% %hours%:%minutes%:%seconds%
+endlocal & set "updated_date=%year%-%month%-%day%T%hours%:%minutes%:%seconds%"
+echo %updated_date%
+goto :EOF
 
-:EOF 
 
 :calculate_last_day
 setlocal EnableDelayedExpansion
@@ -110,4 +123,4 @@ if not defined last_day (
     set "last_day=31"
 )
 endlocal & set "last_day=%last_day%"
-goto :eof
+goto :EOF
