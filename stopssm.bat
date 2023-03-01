@@ -64,6 +64,9 @@ for %%f in ("%xml_folder%\*.xml") do (
     
     set index=0
     for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do (set END[!index!]=%%# & set /A index+=1)
+
+    set index=0
+    for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@ORBIT_ID"') do (set ORBIT_ID[!index!]=%%# & set /A index+=1)
 )
 
 for /f "tokens=* delims=" %%a in ('date_boundary.bat "2020-03-01T00:00:03" "add"') do set "left=%%a"
@@ -75,13 +78,16 @@ pause
 @REM @REM Compare start and end array agains the current datetime 
 call :string_to_date_number  %comparingStamp% compare1
 echo ==================================================================================
-for /l %%a in (0 , 1, %index%) do (
+set /a limit=%index%-1 
+
+for /l %%a in (0 , 1, %limit%) do (
     echo %%a 
     echo !START[%%a]! 
     echo !END[%%a]!
+    echo !ORBIT_ID[%%a]!
     echo ======
-    for /f "tokens=* delims=" %%a in ('date_boundary.bat !START[%%a]! "add"') do set left=%%a
-    for /f "tokens=* delims=" %%# in ('date_boundary.bat !END[%%a]! "sub"') do set right=%%#
+    for /f "tokens=* delims=" %%# in ('date_boundary.bat !START[%%a]! "sub"') do set left=%%#
+    for /f "tokens=* delims=" %%# in ('date_boundary.bat !END[%%a]! "add"') do set right=%%#
     echo !left!
     echo !right!
     echo --------------
@@ -94,7 +100,7 @@ for /l %%a in (0 , 1, %index%) do (
      
     )
 echo ==================================================================================
-
+pause
 @REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@START"') do set "start_date=%%#"
 @REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do set "end_date=%%#"
 
