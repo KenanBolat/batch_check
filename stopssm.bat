@@ -66,7 +66,11 @@ for %%f in ("%xml_folder%\*.xml") do (
     for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do (set END[!index!]=%%# & set /A index+=1)
 )
 
-
+for /f "tokens=* delims=" %%# in ('date_boundary.bat "2020-03-01T00:00:03" "add"') do set "left=%%#"
+for /f "tokens=* delims=" %%# in ('date_boundary.bat "2020-03-01T00:00:03" "sub"') do set "right=%%#"
+echo %left%
+echo %right%
+pause
 
 @REM @REM Compare start and end array agains the current datetime 
 @REM call :string_to_date_number  %comparingStamp% compare1
