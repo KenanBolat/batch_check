@@ -1,35 +1,41 @@
 @ECHO off
+setlocal enabledelayedexpansion
 
-@REM call :check_date "2022-12-31T00:01:50" add updated
-@REM call :check_date "2022-03-01T00:01:50" sub updated
-@REM call :check_date "2020-03-01T00:01:50" sub updated
-@REM call :check_date "2020-03-01T00:01:50" sub updated
-call :check_date "2022-12-31T23:59:50" sub updated
-echo !updated!
+call :date_boundary "2022-01-01T00:00:03" "sub" updated
+@REM call :date_boundary "2022-03-01T00:01:50" sub updated
+@REM call :date_boundary "2020-03-01T00:01:50" sub updated
+@REM call :date_boundary "2020-03-01T00:01:50" sub updated
+@REM call :date_boundary "2022-12-31T23:59:50" sub updated
+echo updated: %updated%
 
 
 :EOF
-:check_date 
+
+:date_boundary 
 setlocal enabledelayedexpansion
-@REM datestring must be either in the format of "yyyy-MM-ddThh:mm:ss"
+
+@REM datestring must be either in the format of yyyy-MM-ddThh:mm:ss
 set "date_string=%~1"
+
 @REM operation must be either sub and add
 set "operation=%~2"
 
 @REM Get the current date and time
 for /f "tokens=1-6 delims=-T:" %%a in ("%date_string%") do (
-    set /a "year=1000%%a %% 100"
-    set /a "month=1000%%b %% 100"
-    set /a "day=1000%%c %% 100"
-    set /a "hours=1000%%d %% 100"
-    set /a "minutes=1000%%e %% 100"
-    set /a "seconds=1000%%f %% 100"
+    echo %%a
+    echo %%b
+    echo %%c
+    echo %%d
+    echo %%e
+    echo %%f
+    echo ==================
+    set /a year=1000%%a %% 100
+    set /a month=1000%%b %% 100
+    set /a day=1000%%c %% 100
+    set /a hours=1000%%d %% 100
+    set /a minutes=1000%%e %% 100
+    set /a seconds=1000%%f %% 100
 )
-
-echo !year!
-echo !operation!
-
-
 
 @REM Add 5 minutes to the current time
 if !operation!==add (
@@ -42,7 +48,7 @@ if !operation!==add (
     set /a "day+=1"
     set /a "hours-=24"
   )
-) else if !operation!==sub (
+) else if !operation!=="sub" (
 
   set /a "minutes-=5"
   if !minutes! lss 0 (
@@ -87,8 +93,10 @@ set /a year=!year!+2000
 if !hours! lss 10 set "hours=0!hours!"
 if !minutes! lss 10 set "minutes=0!minutes!"
 if !seconds! lss 10 set "seconds=0!seconds!"
-endlocal & set "updated_date=%year%-%month%-%day%T%hours%:%minutes%:%seconds%"
-echo %updated_date%
+echo ==================================================================
+echo %year%-%month%-%day%T%hours%:%minutes%:%seconds%
+echo ==================================================================
+endlocal & set updated_date=%year%-%month%-%day%T%hours%:%minutes%:%seconds%
 goto :EOF
 
 

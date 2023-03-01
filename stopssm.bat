@@ -4,9 +4,21 @@
 @REM 
 @REM Author                 : Kenan BOLAT
 @REM Initialization Date    : 2023.02.23  
-@REM Update Date            : 2023.02.24  
+@REM Update Date            : 2023.02.28  
 @REM 
 @REM ======================================
+
+
+@REM call :date_boundary "2022-12-31T00:01:50" add updated
+@REM call :date_boundary "2022-03-01T00:01:50" sub updated
+@REM call :date_boundary "2020-03-01T00:01:50" sub updated
+@REM call :date_boundary "2020-03-01T00:01:50" sub updated
+call :date_boundary "2022-12-31T23:59:50" sub updated
+echo %updated%
+
+
+
+
 
 @REM config the batch parameters 
 setlocal EnableDelayedExpansion
@@ -56,21 +68,21 @@ for %%f in ("%xml_folder%\*.xml") do (
 
 
 
-@REM Compare start and end array agains the current datetime 
-call :string_to_date_number  %comparingStamp% compare1
-echo ==================================================================================
-for /l %%a in (0 , 1, %index%) do (
-    echo %%a 
-    echo !START[%%a]! 
-    echo !END[%%a]! 
-    call :string_to_date_number  !START[%%a]! compare2
-    call :string_to_date_number  !END[%%a]! compare3
-    echo !compare1!
-    echo !compare2!
-    echo !compare3!
-    call :check_date !compare1! !compare2! !compare3!
-    )
-echo ==================================================================================
+@REM @REM Compare start and end array agains the current datetime 
+@REM call :string_to_date_number  %comparingStamp% compare1
+@REM echo ==================================================================================
+@REM for /l %%a in (0 , 1, %index%) do (
+@REM     echo %%a 
+@REM     echo !START[%%a]! 
+@REM     echo !END[%%a]! 
+@REM     call :string_to_date_number  !START[%%a]! compare2
+@REM     call :string_to_date_number  !END[%%a]! compare3
+@REM     echo !compare1!
+@REM     echo !compare2!
+@REM     echo !compare3!
+@REM     call :check_date !compare1! !compare2! !compare3!
+@REM     )
+@REM echo ==================================================================================
 
 @REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@START"') do set "start_date=%%#"
 @REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do set "end_date=%%#"
@@ -172,6 +184,88 @@ if not defined last_day (
 )
 endlocal & set "last_day=%last_day%"
 goto :EOF
+
+
+
+:date_boundary 
+setlocal enabledelayedexpansion
+
+@REM datestring must be either in the format of yyyy-MM-ddThh:mm:ss
+set "date_string=%~1"
+
+@REM operation must be either sub and add
+set "operation=%~2"
+
+@REM Get the current date and time
+for /f "tokens=1-6 delims=-T:" %%a in ("%date_string%") do (
+    set /a "year=1000%%a %% 100"
+    set /a "month=1000%%b %% 100"
+    set /a "day=1000%%c %% 100"
+    set /a "hours=1000%%d %% 100"
+    set /a "minutes=1000%%e %% 100"
+    set /a "seconds=1000%%f %% 100"
+)
+
+@REM Add 5 minutes to the current time
+if !operation!==add (
+  set /a "minutes+=5"
+  if !minutes! geq 60 (
+    set /a "hours+=1"
+    set /a "minutes-=60"
+  )
+  if !hours! geq 24 (
+    set /a "day+=1"
+    set /a "hours-=24"
+  )
+) else if !operation!==sub (
+
+  set /a "minutes-=5"
+  if !minutes! lss 0 (
+    set /a "hours-=1"
+    set /a "minutes+=60"
+  )
+  if !hours! lss 0 (
+    set /a "day-=1"
+    set /a "hours+=24"
+  )
+)
+
+
+@REM Check for end-of-month boundary conditions
+call :calculate_last_day !month! !year! last_day
+if !day! gtr !last_day! (
+  set /a "day=1"
+  set /a "month+=1"
+  if !month! gtr 12 (
+    set /a "month=1"
+    set /a "year+=1"
+  )
+) else if !day! lss 1 (
+
+  set /a "month-=1"
+  if !month! lss 1 (
+    set /a "month=12"
+    set /a "year-=1"
+  )
+
+call :calculate_last_day !month! !year! last_day
+)
+if !day! lss 1 (
+  set /a "day=!last_day!"
+)
+
+@REM Display the updated date and time
+if !day! lss 10 set "day=0!day!"
+if !month! lss 10 set "month=0!month!"
+if !year! lss 10 set "year=!year!"
+set /a year=!year!+2000
+if !hours! lss 10 set "hours=0!hours!"
+if !minutes! lss 10 set "minutes=0!minutes!"
+if !seconds! lss 10 set "seconds=0!seconds!"
+@REM endlocal & set "updated_date=%year%-%month%-%day%T%hours%:%minutes%:%seconds%"
+endlocal & set updated_date=!year!-!month!-!day!T!hours!:!minutes!:!seconds!
+goto :EOF
+
 
 @REM :kill_ssm_task
 @REM echo "INFO"
