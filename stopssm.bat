@@ -66,27 +66,34 @@ for %%f in ("%xml_folder%\*.xml") do (
     for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do (set END[!index!]=%%# & set /A index+=1)
 )
 
-for /f "tokens=* delims=" %%# in ('date_boundary.bat "2020-03-01T00:00:03" "add"') do set "left=%%#"
-for /f "tokens=* delims=" %%# in ('date_boundary.bat "2020-03-01T00:00:03" "sub"') do set "right=%%#"
+for /f "tokens=* delims=" %%a in ('date_boundary.bat "2020-03-01T00:00:03" "add"') do set "left=%%a"
+for /f "tokens=* delims=" %%a in ('date_boundary.bat "2020-03-01T00:00:03" "sub"') do set "right=%%a"
 echo %left%
 echo %right%
-pause
+pause 
 
 @REM @REM Compare start and end array agains the current datetime 
-@REM call :string_to_date_number  %comparingStamp% compare1
-@REM echo ==================================================================================
-@REM for /l %%a in (0 , 1, %index%) do (
-@REM     echo %%a 
-@REM     echo !START[%%a]! 
-@REM     echo !END[%%a]! 
-@REM     call :string_to_date_number  !START[%%a]! compare2
-@REM     call :string_to_date_number  !END[%%a]! compare3
-@REM     echo !compare1!
-@REM     echo !compare2!
-@REM     echo !compare3!
-@REM     call :check_date !compare1! !compare2! !compare3!
-@REM     )
-@REM echo ==================================================================================
+call :string_to_date_number  %comparingStamp% compare1
+echo ==================================================================================
+for /l %%a in (0 , 1, %index%) do (
+    echo %%a 
+    echo !START[%%a]! 
+    echo !END[%%a]!
+    echo ======
+    for /f "tokens=* delims=" %%a in ('date_boundary.bat !START[%%a]! "add"') do set left=%%a
+    for /f "tokens=* delims=" %%# in ('date_boundary.bat !END[%%a]! "sub"') do set right=%%#
+    echo !left!
+    echo !right!
+    echo --------------
+    call :string_to_date_number  !left! compare2
+    call :string_to_date_number  !right! compare3
+    echo !compare1!
+    echo !compare2!
+    echo !compare3!
+    call :check_date !compare1! !compare2! !compare3!
+     
+    )
+echo ==================================================================================
 
 @REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@START"') do set "start_date=%%#"
 @REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do set "end_date=%%#"
@@ -115,7 +122,7 @@ echo ====================================================
 @REM ) else (goto end)
 
 call :check_date %compare1% %compare2% %compare3%
-:check_date
+:check_date 
 if "%~2" LSS "%~1" (
     if "%~3" GTR "%~1" (
         goto ResultBetween

@@ -1,7 +1,7 @@
 @ECHO off
 setlocal enabledelayedexpansion
 
-@REM set date_string="2020-03-01T00:00:03"
+@REM set date_string="2020-03-01T00:00:03Z"
 @REM set operation="sub"
 
 set "date_string=%~1"
@@ -9,7 +9,7 @@ set "operation=%~2"
 
 
 @REM Get the current date and time
-for /f "tokens=1-6 delims=-T:" %%a in ("%date_string%") do (
+for /f "tokens=1-6 delims=-T:Z" %%a in ("%date_string%") do (
     set /a year=1000%%a %% 100
     set /a month=1000%%b %% 100
     set /a day=1000%%c %% 100
@@ -76,8 +76,8 @@ set /a year=!year!+2000
 if !hours! lss 10 set "hours=0!hours!"
 if !minutes! lss 10 set "minutes=0!minutes!"
 if !seconds! lss 10 set "seconds=0!seconds!"
-echo !year!-!month!-!day!T!hours!:!minutes!:!seconds!
-endlocal & set "updated_date=%year%-%month%-%day%T%hours%:%minutes%:%seconds%"
+echo !year!-!month!-!day!T!hours!:!minutes!:!seconds!Z
+endlocal & set "updated_date=%year%-%month%-%day%T%hours%:%minutes%:%seconds%Z"
 goto :EOF
 
 :calculate_last_day
