@@ -76,27 +76,27 @@ echo %right%
 pause 
 
 @REM @REM Compare start and end array agains the current datetime 
-call :string_to_date_number  %comparingStamp% compare1
+call :string_to_date_number  %comparingStamp% current_date
 echo ==================================================================================
 set /a limit=%index%-1 
 
 for /l %%a in (0 , 1, %limit%) do (
-    echo %%a 
+
     echo !START[%%a]! 
     echo !END[%%a]!
     echo !ORBIT_ID[%%a]!
-    echo ======
+    
+
     for /f "tokens=* delims=" %%# in ('date_boundary.bat !START[%%a]! "sub"') do set left=%%#
     for /f "tokens=* delims=" %%# in ('date_boundary.bat !END[%%a]! "add"') do set right=%%#
-    echo !left!
-    echo !right!
-    echo --------------
-    call :string_to_date_number  !left! compare2
-    call :string_to_date_number  !right! compare3
-    echo !compare1!
-    echo !compare2!
-    echo !compare3!
-    call :check_date !compare1! !compare2! !compare3!
+
+    call :string_to_date_number  !left! left_num
+    call :string_to_date_number  !right! right_num
+
+    echo !current_date!
+    echo !left_num!
+    echo !right_num!
+    call :check_date !current_date! !left_num! !right_num!
      
     )
 echo ==================================================================================
