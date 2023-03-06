@@ -4,25 +4,16 @@
 @REM 
 @REM Author                 : Kenan BOLAT
 @REM Initialization Date    : 2023.02.23  
-@REM Update Date            : 2023.02.28  
+@REM Update Date            : 2023.03.06 
 @REM 
 @REM ======================================
 
-
-@REM call :date_boundary "2022-12-31T00:01:50" add updated
-@REM call :date_boundary "2022-03-01T00:01:50" sub updated
-@REM call :date_boundary "2020-03-01T00:01:50" sub updated
-@REM call :date_boundary "2020-03-01T00:01:50" sub updated
-call :date_boundary "2022-12-31T23:59:50" sub updated
-echo %updated%
-
-
-
-
-
 @REM config the batch parameters 
+
 setlocal EnableDelayedExpansion
-TASKKILL /F /IM SSM.EXE
+
+set toi_flag="false"
+
 @REM define directory to look for the xml files  
 set  "xml_folder=C:\Users\knn\Desktop\BATCH"
 
@@ -41,8 +32,8 @@ echo currentTimestamp: "%currentTimestamp%"
 echo currentFullstamp: "%currentFullstamp%"
 echo comparingStamp: "%comparingStamp%"
 
-
-set da=GGS-L-%currentFullstamp% 
+set process_folder=%currentDatestamp% 
+echo %process_folder%
 
 @REM Example date strings to compare the different date strings 
 echo ====================================================
@@ -52,7 +43,7 @@ echo ExampleDate: %date_number%
 echo ====================================================
 
 
-@REM get the contact table "start" and "end" time seperately for each pass   
+@REM get the contact table "start" and "end" time seperately for each pass or the orbit 
 @REM For the GGS the station identifier within the XPATH keywords must be 0 
 @REM For the MGS the station identifier within the XPATH keywords must be 1 
 
@@ -69,11 +60,7 @@ for %%f in ("%xml_folder%\*.xml") do (
     for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@ORBIT_ID"') do (set ORBIT_ID[!index!]=%%# & set /A index+=1)
 )
 
-for /f "tokens=* delims=" %%a in ('date_boundary.bat "2020-03-01T00:00:03" "add"') do set "left=%%a"
-for /f "tokens=* delims=" %%a in ('date_boundary.bat "2020-03-01T00:00:03" "sub"') do set "right=%%a"
-echo %left%
-echo %right%
-pause 
+
 
 @REM @REM Compare start and end array agains the current datetime 
 call :string_to_date_number  %comparingStamp% current_date
@@ -96,11 +83,40 @@ for /l %%a in (0 , 1, %limit%) do (
     echo !current_date!
     echo !left_num!
     echo !right_num!
-    call :check_date !current_date! !left_num! !right_num!
-     
+    call :check_date !current_date! !left_num! !right_num! toi_flag 
+
+    
+    if !toi_flag! equ "true" (  
+      set orbit_id_flag=!ORBIT_ID[%%a]!
+      set "toi_folder=!START[%%a]:~0,10!__!orbit_id_flag!"
+      goto end_loop
     )
-echo ==================================================================================
+)
+:end_loop
+
+echo %orbit_id_flag%
+echo %toi_folder%
 pause
+echo ==================================================================================
+
+
+if %toi_flag% equ "true" (
+  echo "Examined time of interest lies within the time of contact table"
+  
+  call :check_ssm ssm_flag
+  if !ssm_flag! equ "true" (
+    echo "Current ssm instance is working on storing the necessary information"
+  ) else (
+    start /B "" "C:\Program Files (x86)\KE5FX\GPIB\ssm.exe"
+    echo "Current ssm instance is NOT working. A new instance is going to be started"
+  )
+  
+) else (
+
+  echo "For the time slots examined within the contact table there is no intersection or they are out of bounds."
+  echo "Therefore any running instance of ssm will be terminated."
+  TASKKILL /F /IM SSM.EXE
+)
 @REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@START"') do set "start_date=%%#"
 @REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do set "end_date=%%#"
 
@@ -131,12 +147,21 @@ call :check_date %compare1% %compare2% %compare3%
 :check_date 
 if "%~2" LSS "%~1" (
     if "%~3" GTR "%~1" (
-        goto ResultBetween
+        set toi_flag="true"
         exit /b 0
     )
 ) 
 exit /b 1
 
+:check_ssm
+tasklist /fi "imagename eq ssm.exe" 2>NUL | find /i "ssm.exe" >NUL
+if %errorlevel% equ 0 (
+    set ssm_flag="true"
+    pause
+) else (
+    set ssm_flag="false"
+)
+exit /b 
 
 @REM call :string_to_date_number "2023-03-23T22:24:00Z" compare1
 @REM call :string_to_date_number "2023-03-24T22:24:00Z" compare2
