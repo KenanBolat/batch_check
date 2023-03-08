@@ -1,18 +1,16 @@
 @ECHO OFF
-
+@REM START  
 @REM ======================================
 @REM 
 @REM Author                 : Kenan BOLAT
 @REM Initialization Date    : 2023.02.23  
-@REM Update Date            : 2023.03.06 
+@REM Update Date            : 2023.03.08
 @REM 
 @REM ======================================
 
 @REM config the batch parameters 
-
 setlocal EnableDelayedExpansion
 
-set toi_flag="false"
 
 @REM define directory to look for the xml files  
 set  "xml_folder=C:\Users\knn\Desktop\BATCH"
@@ -32,47 +30,67 @@ echo currentTimestamp: "%currentTimestamp%"
 echo currentFullstamp: "%currentFullstamp%"
 echo comparingStamp: "%comparingStamp%"
 
+set logfile=%currentDatestamp%_ssm_check.log
 set process_folder=%currentDatestamp% 
-echo %process_folder%
+
+call :log "INFO" ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+call :log "INFO" "Script Has been initiated"
 
 @REM Example date strings to compare the different date strings 
-echo ====================================================
-echo CurrentDate: %comparingStamp%
-call :string_to_date_number "2023-03-23T22:24:01Z" date_number 
-echo ExampleDate: %date_number%
-echo ====================================================
-
+call :log "INFO" "Currentdate : %comparingStamp%"
 
 @REM get the contact table "start" and "end" time seperately for each pass or the orbit 
 @REM For the GGS the station identifier within the XPATH keywords must be 0 
 @REM For the MGS the station identifier within the XPATH keywords must be 1 
 
-@REM populate start and end datetime arrays for each xml file 
-for %%f in ("%xml_folder%\*.xml") do (
-    echo "CONTACT_TABLE : %%f" 
-    set index=0
-    for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@START"') do (set START[!index!]=%%# & set /A index+=1)
-    
-    set index=0
-    for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do (set END[!index!]=%%# & set /A index+=1)
+@REM error handling tags
+set toi_flag="false"
+set empty_folder="true"
+set xpath_start_flag="true"
+set xpath_end_flag="true"
+set xpath_pass_flag="true"
 
-    set index=0
-    for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@ORBIT_ID"') do (set ORBIT_ID[!index!]=%%# & set /A index+=1)
+@REM populate start and end datetime arrays for each xml file 
+call :log "INFO" "Contact table is being searched"
+for %%f in ("%xml_folder%\*.xml") do (
+  call :log "INFO" "CONTACT_TABLE : %%f"
+
+  set index=0
+  for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@START"') do (set START[!index!]=%%# & set /A index+=1 & set xpath_start_flag="false")
+
+  set index=0
+  for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do (set END[!index!]=%%# & set /A index+=1 & set xpath_end_flag="false" )
+
+  set index=0
+  for /f "tokens=* delims=" %%# in ('xpath.bat %%f "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@ORBIT_ID"') do (set ORBIT_ID[!index!]=%%# & set /A index+=1 & set xpath_pass_flag="false" )
+  set empty_folder="false"
 )
 
+@REM Error Handling
+if %empty_folder% equ "true" (
+  call :log "ERROR" "No xml has been found. Please provide a contact table in the form of xml"
+  exit /b 
+)
 
+if %xpath_start_flag% equ "true" (
+  call :log "ERROR" "There is an error in the filtering mechanism.Check XPATH tags [START]."
+  exit /b 
+)
+
+if %xpath_end_flag% equ "true" (
+  call :log "ERROR" "There is an error in the filtering mechanism.Check XPATH tags [END]."
+  exit /b 
+)
+
+if %xpath_pass_flag% equ "true" (
+  call :log "ERROR" "There is an error in the filtering mechanism.Check XPATH tags [PASS]."
+  exit /b 
+)
 
 @REM @REM Compare start and end array agains the current datetime 
 call :string_to_date_number  %comparingStamp% current_date
-echo ==================================================================================
 set /a limit=%index%-1 
-
 for /l %%a in (0 , 1, %limit%) do (
-
-    echo !START[%%a]! 
-    echo !END[%%a]!
-    echo !ORBIT_ID[%%a]!
-    
 
     for /f "tokens=* delims=" %%# in ('date_boundary.bat !START[%%a]! "sub"') do set left=%%#
     for /f "tokens=* delims=" %%# in ('date_boundary.bat !END[%%a]! "add"') do set right=%%#
@@ -80,11 +98,8 @@ for /l %%a in (0 , 1, %limit%) do (
     call :string_to_date_number  !left! left_num
     call :string_to_date_number  !right! right_num
 
-    echo !current_date!
-    echo !left_num!
-    echo !right_num!
     call :check_date !current_date! !left_num! !right_num! toi_flag 
-
+    call :log "INFO" "[%%a] : !START[%%a]! : !END[%%a]! : !ORBIT_ID[%%a]! : !toi_flag!"
     
     if !toi_flag! equ "true" (  
       set orbit_id_flag=!ORBIT_ID[%%a]!
@@ -92,58 +107,35 @@ for /l %%a in (0 , 1, %limit%) do (
       goto end_loop
     )
 )
+
 :end_loop
 
-echo %orbit_id_flag%
-echo %toi_folder%
-pause
-echo ==================================================================================
-
-
 if %toi_flag% equ "true" (
-  echo "Examined time of interest lies within the time of contact table"
+  call :log "INFO" "Examined time of interest lies within the time of contact table"
   
   call :check_ssm ssm_flag
   if !ssm_flag! equ "true" (
-    echo "Current ssm instance is working on storing the necessary information"
-  ) else (
-    start /B "" "C:\Program Files (x86)\KE5FX\GPIB\ssm.exe"
-    echo "Current ssm instance is NOT working. A new instance is going to be started"
+    call :log "INFO" "Currently an ssm instance is working on storing the necessary information. No new instance is going to be initiated."
+  ) else ( 
+    start /B "" "C:\Program Files (x86)\KE5FX\GPIB\ssm.exe" 
+    call :log "WARNING"  "Currently there is no ssm instance is working. A new instance is going to be initiated."
   )
   
 ) else (
 
-  echo "For the time slots examined within the contact table there is no intersection or they are out of bounds."
-  echo "Therefore any running instance of ssm will be terminated."
-  TASKKILL /F /IM SSM.EXE
+  call :log "INFO" "For the time slots examined within the contact table there is no intersection or they are out of bounds."
+  call :log "WARNING" "Therefore any running instance of ssm will be terminated."
+  @REM TODO 
+  @REM TODO 
+  TASKKILL /F /IM SSM.EXE 2>&1 | call :log "WARNING" %*
 )
-@REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@START"') do set "start_date=%%#"
-@REM for /f "tokens=* delims=" %%# in ('xpath.bat "GKT_20230221103925_CONTACT.xml" "/CONTACT_TABLE/PASSES/STATION[0]//PASS/@END"') do set "end_date=%%#"
-
-@REM echo %start_date%
-@REM echo %end_date%
 
 
-@REM if 2023-03-23T22:24:00Z GTR 2023-03-23T22:26:00Z  if 2023-03-23T22:26:00Z LSS 2023-03-23T22:29:39Z   goto ResultBetween
+call :log "INFO" "Script has been finalized."
+call :log "INFO" ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
-call :string_to_date_number "2023-03-24T22:08:00Z" compare1
-call :string_to_date_number "2023-03-24T22:07:00Z" compare2 @REM Start Date 
-call :string_to_date_number "2023-03-24T22:10:00Z" compare3 @REM End Date 
-echo ====================================================
-echo %compare1%
-echo %compare2%
-echo %compare3%
-echo ====================================================
-
-@REM if "%compare2%" LSS "%compare1%" (
-@REM     if "%compare3%" GTR "%compare1%" (
-@REM         echo "inside" 
-@REM     ) else (
-@REM         goto end
-@REM     )
-@REM ) else (goto end)
-
-call :check_date %compare1% %compare2% %compare3%
+@REM END 
+@REM Subroutines 
 :check_date 
 if "%~2" LSS "%~1" (
     if "%~3" GTR "%~1" (
@@ -157,21 +149,11 @@ exit /b 1
 tasklist /fi "imagename eq ssm.exe" 2>NUL | find /i "ssm.exe" >NUL
 if %errorlevel% equ 0 (
     set ssm_flag="true"
-    pause
+    
 ) else (
     set ssm_flag="false"
 )
 exit /b 
-
-@REM call :string_to_date_number "2023-03-23T22:24:00Z" compare1
-@REM call :string_to_date_number "2023-03-24T22:24:00Z" compare2
-
-@REM if "%compare1%" LSS "%compare2%"   goto ResultBetween
-:EOF 
-
-:ResultBetween
-echo "Between"
-goto :EOF
 
 
 
@@ -308,8 +290,11 @@ if !seconds! lss 10 set "seconds=0!seconds!"
 endlocal & set updated_date=!year!-!month!-!day!T!hours!:!minutes!:!seconds!
 goto :EOF
 
-
-@REM :kill_ssm_task
-@REM echo "INFO"
-@REM @rem TASKKILL /F /IM SSM.EXE
-@REM exit /b 
+:log
+setlocal enabledelayedexpansion
+for /f "tokens=2 delims==" %%a in ('wmic OS Get localdatetime /value') do set "dt=%%a"
+set "YY=%dt:~2,2%" & set "YYYY=%dt:~0,4%" & set "MM=%dt:~4,2%" & set "DD=%dt:~6,2%"
+set "HH=%dt:~8,2%" & set "Min=%dt:~10,2%" & set "Sec=%dt:~12,2%"
+echo %2
+echo [%YYYY%%MM%%DD% %HH%:%Min%:%Sec%] [%1]  %2 >> %logfile%
+exit /b
