@@ -125,8 +125,6 @@ if %toi_flag% equ "true" (
 
   call :log "INFO" "For the time slots examined within the contact table there is no intersection or they are out of bounds."
   call :log "WARNING" "Therefore any running instance of ssm will be terminated."
-  @REM TODO 
-  @REM TODO 
   @REM TASKKILL /F /IM SSM.EXE 2>&1 
   set "message="
   for /f "tokens=* delims=" %%z in ('TASKKILL /F /IM SSM.EXE  2^>^&1') do (
