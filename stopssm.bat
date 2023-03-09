@@ -4,7 +4,7 @@
 @REM 
 @REM Author                 : Kenan BOLAT
 @REM Initialization Date    : 2023.02.23  
-@REM Update Date            : 2023.03.08
+@REM Update Date            : 2023.03.09
 @REM 
 @REM ======================================
 
@@ -69,22 +69,22 @@ for %%f in ("%xml_folder%\*.xml") do (
 @REM Error Handling
 if %empty_folder% equ "true" (
   call :log "ERROR" "No xml has been found. Please provide a contact table in the form of xml"
-  exit /b 
+  goto :exit  
 )
 
 if %xpath_start_flag% equ "true" (
   call :log "ERROR" "There is an error in the filtering mechanism.Check XPATH tags [START]."
-  exit /b 
+  goto :exit 
 )
 
 if %xpath_end_flag% equ "true" (
   call :log "ERROR" "There is an error in the filtering mechanism.Check XPATH tags [END]."
-  exit /b 
+  goto :exit 
 )
 
 if %xpath_pass_flag% equ "true" (
   call :log "ERROR" "There is an error in the filtering mechanism.Check XPATH tags [PASS]."
-  exit /b 
+  goto :exit 
 )
 
 @REM @REM Compare start and end array agains the current datetime 
@@ -127,12 +127,19 @@ if %toi_flag% equ "true" (
   call :log "WARNING" "Therefore any running instance of ssm will be terminated."
   @REM TODO 
   @REM TODO 
-  TASKKILL /F /IM SSM.EXE 2>&1 | call :log "WARNING" %*
+  @REM TASKKILL /F /IM SSM.EXE 2>&1 
+  set "message="
+  for /f "tokens=* delims=" %%z in ('TASKKILL /F /IM SSM.EXE  2^>^&1') do (
+    set "message=!message! %%~z"
+    echo %%~z
+    )
+  call :log "INFO" !message!
+  endlocal
+  pause 
 )
 
 
-call :log "INFO" "Script has been finalized."
-call :log "INFO" ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+goto :exit 
 
 @REM END 
 @REM Subroutines 
@@ -298,3 +305,11 @@ set "HH=%dt:~8,2%" & set "Min=%dt:~10,2%" & set "Sec=%dt:~12,2%"
 echo %2
 echo [%YYYY%%MM%%DD% %HH%:%Min%:%Sec%] [%1]  %2 >> %logfile%
 exit /b
+
+
+:exit
+call :log "INFO" "Script has been finalized."
+call :log "INFO" ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+goto :EOF
+
+:EOF 
