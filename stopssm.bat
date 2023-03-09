@@ -126,7 +126,6 @@ if %toi_flag% equ "true" (
   call :log "INFO" !message!
 )
 
-
 goto :exit 
 
 @REM END 
@@ -150,8 +149,6 @@ if %errorlevel% equ 0 (
 )
 exit /b 
 
-
-
 @REM Usage: call :string_to_date_number "2023-03-23T22:24:00Z" date_number
 :string_to_date_number
 setlocal
@@ -166,10 +163,6 @@ set "ms=%datestr:~20,3%"
 set "datetime=%yyyy%%mm%%dd%%hh%%nn%%ss%.%ms%"
 endlocal & set "%~2=%datetime%"
 exit /b
-
-
-
-
 
 :calculate_last_day
 setlocal EnableDelayedExpansion
@@ -203,8 +196,6 @@ if not defined last_day (
 )
 endlocal & set "last_day=%last_day%"
 goto :EOF
-
-
 
 :date_boundary 
 setlocal enabledelayedexpansion
@@ -291,7 +282,7 @@ for /f "tokens=2 delims==" %%a in ('wmic OS Get localdatetime /value') do set "d
 set "YY=%dt:~2,2%" & set "YYYY=%dt:~0,4%" & set "MM=%dt:~4,2%" & set "DD=%dt:~6,2%"
 set "HH=%dt:~8,2%" & set "Min=%dt:~10,2%" & set "Sec=%dt:~12,2%"
 echo %2
-echo [%YYYY%%MM%%DD% %HH%:%Min%:%Sec%] [%1]  %2 >> %logfile%
+echo [%YYYY%%MM%%DD% %HH%:%Min%:%Sec%][%1] %2 >> %logfile%
 exit /b
 
 
