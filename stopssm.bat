@@ -11,7 +11,6 @@
 @REM config the batch parameters 
 setlocal EnableDelayedExpansion
 
-
 @REM define directory to look for the xml files  
 set  "xml_folder=C:\Users\knn\Desktop\BATCH"
 
@@ -24,11 +23,6 @@ set "currentDatestamp=%YYYY%%MM%%DD%"
 set "currentTimestamp=%HH%%Min%%Sec%"
 set "currentFullstamp=%YYYY%-%MM%-%DD%-%HH%-%Min%-%Sec%"
 set "comparingStamp=%YYYY%-%MM%-%DD%-%HH%:%Min%:%Sec%"
-
-echo currentDatestamp: "%currentDatestamp%"
-echo currentTimestamp: "%currentTimestamp%"
-echo currentFullstamp: "%currentFullstamp%"
-echo comparingStamp: "%comparingStamp%"
 
 set logfile=%currentDatestamp%_ssm_check.log
 set process_folder=%currentDatestamp% 
@@ -104,7 +98,7 @@ for /l %%a in (0 , 1, %limit%) do (
     if !toi_flag! equ "true" (  
       set orbit_id_flag=!ORBIT_ID[%%a]!
       set "toi_folder=!START[%%a]:~0,10!__!orbit_id_flag!"
-      goto end_loop
+      goto :end_loop
     )
 )
 
@@ -126,14 +120,10 @@ if %toi_flag% equ "true" (
   call :log "INFO" "For the time slots examined within the contact table there is no intersection or they are out of bounds."
   call :log "WARNING" "Therefore any running instance of ssm will be terminated."
   @REM TASKKILL /F /IM SSM.EXE 2>&1 
-  set "message="
-  for /f "tokens=* delims=" %%z in ('TASKKILL /F /IM SSM.EXE  2^>^&1') do (
-    set "message=!message! %%~z"
-    echo %%~z
+  for /f "tokens=* delims=" %%z in ('TASKKILL /f /im ssm.exe 2^>^&1') do (
+    set "message=%%~z"
     )
   call :log "INFO" !message!
-  endlocal
-  pause 
 )
 
 
