@@ -4,7 +4,7 @@
 @REM 
 @REM Author                 : Kenan BOLAT
 @REM Initialization Date    : 2023.02.23  
-@REM Update Date            : 2023.03.09
+@REM Update Date            : 2023.03.09  
 @REM 
 @REM ======================================
 
@@ -85,7 +85,7 @@ if %xpath_pass_flag% equ "true" (
 call :string_to_date_number  %comparingStamp% current_date
 set /a limit=%index%-1 
 for /l %%a in (0 , 1, %limit%) do (
-
+    set "formattedValue=000000%%a"
     for /f "tokens=* delims=" %%# in ('date_boundary.bat !START[%%a]! "sub"') do set left=%%#
     for /f "tokens=* delims=" %%# in ('date_boundary.bat !END[%%a]! "add"') do set right=%%#
 
@@ -93,7 +93,7 @@ for /l %%a in (0 , 1, %limit%) do (
     call :string_to_date_number  !right! right_num
 
     call :check_date !current_date! !left_num! !right_num! toi_flag 
-    call :log "INFO" "[%%a] : !START[%%a]! : !END[%%a]! : !ORBIT_ID[%%a]! : !toi_flag!"
+    call :log "INFO" "[!formattedValue:~-3!] : !START[%%a]! : !END[%%a]! : !ORBIT_ID[%%a]! : !toi_flag!"
     
     if !toi_flag! equ "true" (  
       set orbit_id_flag=!ORBIT_ID[%%a]!
